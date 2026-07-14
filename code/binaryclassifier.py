@@ -16,7 +16,24 @@ def normalize(values):
 def sigmoid(z):
     return 1/(1+np.exp(-z))
 
-def gradient_descent(W, b, X_batch, y_batch, batch):
+def gradient_descent(W, b, X_batch, y_batch, rate):
+    #X_batch: B * n
+    #y_batch: B * 1
+    #W: n * 1
+    batch_size = len(X_batch)
+    z = np.dot(X_batch, W) + b
+    y_hat = sigmoid(z)
+    error = y_hat - y_batch
+    
+    dw = (1/batch_size) * np.dot(X_batch.T, error)
+    db = np.mean(error)
+    
+    W -= rate * dw
+    b -= rate * db
+    
+    return W, b
+    
+    
     
     
 
