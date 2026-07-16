@@ -6,14 +6,16 @@ file_path = '../data/secom_imputed_dataset.xlsx'
 def prepare_data(df, target_column):
     X = df.drop(columns=[target_column]).to_numpy()
     y = df[target_column].to_numpy()
+    y = y.reshape(-1,1)
     return X, y
 
-def normalize(values):
-    min = min(values)
-    max = max(values)
-    return [(v-min) / (max-min) for v in values]
+def normalize(X):
+    min_vals = np.min(X,axis=0)
+    max_vals = np.max(X,axis=0)
+    return (X - min_vals) / (max_vals - min_vals + 1e-8)
 
 def sigmoid(z):
+    z = np.clip(z,-250,250)
     return 1/(1+np.exp(-z))
 
 def gradient_descent(W, b, X_batch, y_batch, rate):
@@ -23,6 +25,7 @@ def gradient_descent(W, b, X_batch, y_batch, rate):
     batch_size = len(X_batch)
     z = np.dot(X_batch, W) + b
     y_hat = sigmoid(z)
+
     error = y_hat - y_batch
     
     dw = (1/batch_size) * np.dot(X_batch.T, error)
@@ -32,6 +35,39 @@ def gradient_descent(W, b, X_batch, y_batch, rate):
     b -= rate * db
     
     return W, b
+
+if __name__== "__main__":
+    df = pd.read_excel(file_path,sheet_name='SECOM_Data')
+    df['result'] = df['result'].map({'Pass':1, 'Fail':0}) 
+    X, y = prepare_data(df,'result')
+    
+    X_normalized = normalize(X)
+    
+    num_samples = X.shape[0]
+    num_features = X.shape[1]
+    
+    batch_size = 64
+    epochs = 100
+    learning_rate = 0.01
+    
+    W = np.zeros((num_features,1))
+    b = 0.0
+    
+    for epoch in range(epochs):
+        
+        for i in range(0,num_samples,batch_size):
+            
+            X_batch = X_normalized[i:i+batch_size]
+            y_batch = y[i:i+batch_size]
+            
+            W,b = gradient_descent(W,b,X_batch,y_batch,learning_rate)
+            
+        if (epoch + 1) % 10 == 0:
+            print(f"Epoch {epoch + 1}/{epochs} 완료")
+    
+    print("모델 학습이 성공적으로 완료되었습니다!")
+    
+    
     
     
     
