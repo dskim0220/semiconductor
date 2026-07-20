@@ -36,10 +36,32 @@ def gradient_descent(W, b, X_batch, y_batch, rate):
     
     return W, b
 
+def model_test(df_test, W, b, train_min, train_max):
+    X, y = prepare_data(df_test,'result')
+    X_normalized = (X - train_min) / (train_max - train_min + 1e-8)
+    
+    z = np.dot(X_normalized,W) + b
+    y_hat = sigmoid(z)
+    
+    determined = (y_hat >= 0.5).astype(int)
+    accuracy = np.mean(determined == y)
+    
+    return accuracy
+    
+    
 if __name__== "__main__":
     df = pd.read_excel(file_path,sheet_name='SECOM_Data')
     df['result'] = df['result'].map({'Pass':1, 'Fail':0}) 
-    X, y = prepare_data(df,'result')
+    ########
+    df = df.sample(frac=1,random_state=42).reset_index(drop=True)
+    
+    df_train = df[0:1472]
+    df_test = df[1472:]
+    ########
+    X, y = prepare_data(df_train,'result')
+    
+    train_min = np.min(X,axis=0)
+    train_max = np.max(X,axis=0)
     
     X_normalized = normalize(X)
     
@@ -66,6 +88,11 @@ if __name__== "__main__":
             print(f"Epoch {epoch + 1}/{epochs} 완료")
     
     print("모델 학습이 성공적으로 완료되었습니다!")
+    
+    accuracy = model_test(df_test,W,b,train_min,train_max)
+    print(f"정확도: {accuracy * 100:.2f}%")
+    
+    
     
     
     
